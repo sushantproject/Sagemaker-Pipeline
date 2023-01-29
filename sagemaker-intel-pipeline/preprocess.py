@@ -87,6 +87,10 @@ def resize_image():
         from_path=dataset_zip,
         to_path=dataset_extracted
     )
+    # print all the files in the directory
+    print("##############: Files ############")
+    print(os.listdir(dataset_extracted))
+    print("############## ::: ############")
     dataset_train = list((dataset_extracted / "train").glob("*/*.jpg"))
     labels = [x.parent.stem for x in dataset_train]
     
@@ -149,7 +153,7 @@ if __name__=="__main__":
     subprocess.check_call('cp -r /opt/ml/processing/sagemaker-intel-classification/dataset/train/* /opt/ml/processing/dataset/train', shell=True)
     subprocess.check_call('cp -r /opt/ml/processing/sagemaker-intel-classification/dataset/test/* /opt/ml/processing/dataset/test', shell=True)
     
-    print(":: Sync Processed Data to Git & DVC")
-    sync_data_with_dvc(repo)
+    # print(":: Sync Processed Data to Git & DVC")
+    # sync_data_with_dvc(repo)
 
  

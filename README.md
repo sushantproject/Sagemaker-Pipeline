@@ -49,3 +49,21 @@ Tensoboard Dev Link: https://tensorboard.dev/experiment/1qsRwgwJQPK3NgCOSv55Mg/#
 I attached the recorded gif for confusion matrix images, as tensorboard dev not support images. 
 ![GIF Confusion Matrix](files/confusion_matrix_demo.gif)
 Full logs is available here in gdrive: ![Logs GDrive Link]()
+
+
+**Model Evaluation**
+```json
+{"multiclass_classification_metrics": {"accuracy": {"value": 0.9056666493415833, "standard_deviation": "0"}, "confusion_matrix": {"buildings": 24.94279146194458, "forest": 33.122363686561584, "glacier": 31.28390610218048, "mountain": 28.57142984867096, "sea": 31.568628549575806, "street": 31.736525893211365}}}
+```
+**Training Logs S3 screenshot**
+![](files/sagemaker_tensorboard.png)
+
+**Hparams Yaml**
+```yaml
+learning_rate: 1.2e-05
+lr: 1.2e-05
+model_name: regnetz_c16
+num_classes: 6
+optimizer_name: ADAM
+
+```

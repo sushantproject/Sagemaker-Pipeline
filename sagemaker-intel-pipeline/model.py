@@ -163,4 +163,13 @@ class LitResnet(pl.LightningModule):
             self.parameters(),
             lr=self.lr,
         )
-        return {"optimizer": optimizer}
+        # return {"optimizer": optimizer}
+        sch = torch.optim.lr_scheduler.StepLR(optimizer, step_size  = 10 , gamma = 0.5)
+        return {
+            "optimizer":optimizer,
+            "lr_scheduler" : {
+                "scheduler" : sch,
+                "monitor" : "train/loss",
+                
+            }
+          }

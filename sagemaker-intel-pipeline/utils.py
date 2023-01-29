@@ -1,25 +1,40 @@
 import bz2
-import contextlib
 import gzip
-import hashlib
-import itertools
 import lzma
 import os
 import os.path
 import pathlib
-import re
-import sys
 import tarfile
-import urllib
-import urllib.error
-import urllib.request
-import warnings
 import zipfile
-import numpy as np
-import requests
+import boto3
 
+import tarfile
 from urllib.parse import urlparse
 from typing import Any, Callable, Dict, IO, Iterable, Iterator, List, Optional, Tuple, TypeVar
+
+
+
+def get_model_bucket_key(model_s3_uri):
+    o = urlparse(model_s3_uri)
+    bucket = o.netloc
+    key = o.path
+    return bucket, key
+
+
+def extract_model(model_s3_uri, extract_folder):
+    try:
+        s3 = boto3.client('s3')
+        filename = '/tmp/model.tar.gz'
+        bucket, key = get_model_bucket_key(model_s3_uri)
+        print("Bucket: {}, Key: {}".format(bucket, key))
+        s3.download_file(bucket, key[1:], filename)
+
+        tar = tarfile.open(filename)
+        tar.extractall(extract_folder)
+        print("All files in the directory after extracting:: {} ".format(os.listdir(extract_folder)))
+        tar.close()
+    except Exception as e:
+        raise e
 
 
 def _extract_tar(from_path: str, to_path: str, compression: Optional[str]) -> None:
@@ -35,7 +50,7 @@ _ZIP_COMPRESSION_MAP: Dict[str, int] = {
 
 def _extract_zip(from_path: str, to_path: str, compression: Optional[str]) -> None:
     with zipfile.ZipFile(
-        from_path, "r", compression=_ZIP_COMPRESSION_MAP[compression] if compression else zipfile.ZIP_STORED
+            from_path, "r", compression=_ZIP_COMPRESSION_MAP[compression] if compression else zipfile.ZIP_STORED
     ) as zip:
         zip.extractall(to_path)
 
@@ -123,7 +138,7 @@ def _decompress(from_path: str, to_path: Optional[str] = None, remove_finished: 
         os.remove(from_path)
 
     return to_path
-    
+
 
 def extract_archive(from_path: str, to_path: Optional[str] = None, remove_finished: bool = False) -> str:
     """Extract an archive.
@@ -157,3 +172,35 @@ def extract_archive(from_path: str, to_path: Optional[str] = None, remove_finish
 
     return to_path
 
+
+def download_file_from_s3(bucket_name, file_name, path_to_download='/tmp'):
+    # download file
+    # Create an S3 client
+    s3 = boto3.client('s3')
+
+    # Download the zip file from S3
+    s3.download_file(bucket_name, file_name, path_to_download + "/" + file_name)
+    print("Sucessfully file downloaded")
+
+
+def find_bucket_key(s3_path):
+    """
+    This is a helper function that given an s3 path such that the path is of
+    the form: bucket/key
+    It will return the bucket and the key represented by the s3 path
+    """
+    s3_components = s3_path.split('/')
+    bucket = s3_components[0]
+    s3_key = ""
+    if len(s3_components) > 1:
+        s3_key = '/'.join(s3_components[1:])
+    return bucket, s3_key
+
+def split_s3_bucket_key(s3_path):
+    """Split s3 path into bucket and key prefix.
+    This will also handle the s3:// prefix.
+    :return: Tuple of ('bucketname', 'keyname')
+    """
+    if s3_path.startswith('s3://'):
+        s3_path = s3_path[5:]
+    return find_bucket_key(s3_path)

@@ -28,15 +28,21 @@ class IntelClassificationDataModule(pl.LightningDataModule):
         # data transformations
         ######################
         # References: https://pytorch.org/vision/stable/auto_examples/plot_transforms.html
+        self.transforms1 = T.RandomApply(
+            [
+                T.RandomRotation(degrees=(0, 70)),
+                T.RandomHorizontalFlip(p=0.5),
+                T.ColorJitter(brightness=(0.1, 0.6), contrast=1, saturation=0, hue=0.3),
+                T.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 5)),
+                T.RandomHorizontalFlip(p=0.3),
+            ], 
+            p=0.3
+        )
         self.transforms = T.Compose([
-            T.RandomRotation(degrees=66),
-            T.RandomHorizontalFlip(p=0.5),
-            T.ColorJitter(brightness=(0.1, 0.6), contrast=1, saturation=0, hue=0.4),
-            T.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 5)),
-            T.Resize((224, 224)),
-            T.RandomCrop(size=(128, 128)),
-            T.ToTensor(),
-            T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                self.transforms1,
+                T.Resize((224, 224)),
+                T.ToTensor(),
+                T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ])
         self.data_train: Optional[Dataset] = None
         self.data_test: Optional[Dataset] = None
@@ -78,7 +84,7 @@ class IntelClassificationDataModule(pl.LightningDataModule):
 
     def val_dataloader(self):
         return DataLoader(
-            dataset=self.data_train,
+            dataset=self.data_test,
             batch_size=self.hparams.batch_size,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,

@@ -10,6 +10,7 @@ import pytorch_lightning as pl
 from pathlib import Path
 from torchvision.datasets import ImageFolder
 from pytorch_lightning import loggers as pl_loggers
+from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 
 
 from model import LitResnet
@@ -21,6 +22,7 @@ num_cpus = int(os.environ.get("SM_NUM_CPUS"))
 
 train_channel = os.environ.get("SM_CHANNEL_TRAIN")
 test_channel = os.environ.get("SM_CHANNEL_TEST")
+# annotate_channel = os.environ.get("SM_CHANNEL_ANNOTATE")
 
 ml_root = Path("/opt/ml")
 
@@ -40,12 +42,16 @@ def get_training_env():
 
 def train(model, datamodule, sm_training_env):
     tb_logger = pl_loggers.TensorBoardLogger(save_dir=ml_root / "output" / "tensorboard" / sm_training_env["job_name"])
-    
+    early_stop_callback = EarlyStopping(monitor="val/acc", min_delta=0.00, patience=3, verbose=False, mode="max")
+
     trainer = pl.Trainer(
         max_epochs=5,
         accelerator="auto",
+        callbacks=[early_stop_callback],
         logger=[tb_logger]
     )
+    hyperparameters = dict(model_name=model_name, optimizer_name=optimizer_name, learning_rate=learning_rate)
+    trainer.logger.log_hyperparams(hyperparameters)
     
     trainer.fit(model, datamodule)
     

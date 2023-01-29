@@ -7,3 +7,7 @@ gitpython
 scikit-learn
 pytorch-lightning
 timm
+pillow
+boto3
+tensorboard
+alibi-detect[torch]
